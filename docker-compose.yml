@@ -1,0 +1,43 @@
+version: '3.3'
+
+services:
+    ms_apigateway:
+          image: express-gateway:latest
+          container_name: ms_express_gateway
+          volumes:
+              - "./express-gateway/config:/var/lib/eg"
+          networks:
+              - ms_network
+          ports:
+              - 8080:8080
+              - 9876:9876
+    ms_mongo:
+        image: mongo:latest
+        container_name: ms_mongo
+        ports:
+            - "27017:27017"
+        networks:
+            - ms_network
+
+    users:
+        build: ./users
+        container_name: ms_users
+        environment:
+            - loglevel=none
+            - MONGODB_URI='mongodb://ms_mongo:27017/ms_user'
+            - PORT=3001
+        links:
+            - "ms_mongo:ms_mongo"
+        depends_on:
+            - ms_mongo
+        volumes:
+            - "./users:/src/app"
+        working_dir: "/src/app"
+        ports:
+            - "3001:3001"
+        command: npm run start
+        networks:
+            - ms_network
+
+networks:
+    ms_network:
